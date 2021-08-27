@@ -4,4 +4,8 @@ __all__ = ['Telescope']
 
 # Cell
 class Telescope:
-    pass
+    '''
+    Main API class
+    '''
+    def __init__(self):
+        pass
