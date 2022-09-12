@@ -135,3 +135,5 @@ sidebar.yml
 # Telescope config
 telescope.ini
 
+
+/.quarto/
