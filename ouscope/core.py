@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['Telescope']
 
-# %% ../00_core.ipynb 3
+# %% ../00_core.ipynb 2
 import logging
 import requests
 from requests import session
@@ -14,11 +14,11 @@ from bs4 import BeautifulSoup
 import json
 import time
 
-# %% ../00_core.ipynb 4
+# %% ../00_core.ipynb 3
 def cleanup(s):
     return s.encode('ascii','ignore').decode('ascii','ignore')
 
-# %% ../00_core.ipynb 5
+# %% ../00_core.ipynb 4
 class Telescope:
     '''
     Main API class
@@ -64,7 +64,7 @@ class Telescope:
         self.cache=cache
 
 
-# %% ../00_core.ipynb 6
+# %% ../00_core.ipynb 5
 @patch
 def login(self: Telescope):
     log = logging.getLogger(__name__)
@@ -77,14 +77,14 @@ def login(self: Telescope):
     log.debug('Logging in ...')
     self.s.post(self.url+'login.php', data=payload)
 
-# %% ../00_core.ipynb 7
+# %% ../00_core.ipynb 6
 @patch
 def logout(self: Telescope):
     if self.s is None :
         self.s.post(self.url+'logout.php')
         self.s=None
 
-# %% ../00_core.ipynb 9
+# %% ../00_core.ipynb 8
 @patch
 def get_user_requests(self: Telescope, sort='rid', folder=1):
     '''
@@ -120,7 +120,7 @@ def get_user_requests(self: Telescope, sort='rid', folder=1):
     res+=dat['data']['requests']
     return res
 
-# %% ../00_core.ipynb 11
+# %% ../00_core.ipynb 10
 @patch
 def get_user_folders(self: Telescope):
     '''
@@ -130,7 +130,7 @@ def get_user_folders(self: Telescope):
                                                'request': "0-get-my-folders"})
     return json.loads(rq.content)['data']
 
-# %% ../00_core.ipynb 13
+# %% ../00_core.ipynb 12
 @patch
 def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=16, minute=0):
     '''Get the dt days of observations taken no later then time in t.
