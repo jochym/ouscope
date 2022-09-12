@@ -250,15 +250,23 @@ def get_job(self: Telescope, jid=None):
 
 # %% ../10_core.ipynb 16
 @patch
-def download_obs(self: Telescope, obs=None, directory='.', cube=False):
-    '''Download the raw observation obs (obtained from get_job) into zip
-    file named job_jid.zip located in the directory (current by default).
-    Alternatively, when the cube=True the file will be a 3D fits file.
-    The name of the file (without directory) is returned.'''
+def download_obs(self: Telescope, obs=None, directory='.', cube=True):
+    '''Download the raw observation obs (obtained from get_job) into 3D fits
+    file named jid.fits located in the directory (current by default).
+    Alternatively, when the cube=False the file will be a zip of 3 fits files.
+    The name of the file (without directory) is returned.
+    
+    The zip API got dropped from telescope.org and it stoped working. 
+    
+    '''
 
     assert(obs is not None)
     assert(self.s is not None)
 
+    if not cube:
+        print('The zip output is no longer supported!')
+        return None
+    
     rq=self.s.get(self.url+
                   ('v3image-download%s.php?jid=%d' %
                     ('' if cube else '-layers', obs['jid'])),
@@ -273,7 +281,7 @@ def download_obs(self: Telescope, obs=None, directory='.', cube=False):
 
 # %% ../10_core.ipynb 18
 @patch
-def get_obs(self: Telescope, obs=None, cube=False, recurse=True):
+def get_obs(self: Telescope, obs=None, cube=True, recurse=True):
     '''Get the raw observation obs (obtained from get_job) into zip
     file-like object. The function returns ZipFile structure of the
     downloaded data.'''
@@ -333,7 +341,7 @@ def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False)
             dl=dlif.get('src')
             rq=self.s.get(self.url+dl,stream=True)
 
-            fn = ('brt_%(jid)d.' % obs) + ('fits' if cube else 'zip')
+            fn = ('art_%(jid)d.' % obs) + ('fits' if cube else 'zip')
             with open(path.join(directory, fn), 'wb') as fd:
                 for chunk in rq.iter_content(512):
                     fd.write(chunk)
@@ -359,7 +367,7 @@ def get_obs_processed(self: Telescope, obs=None, cube=False):
     log = logging.getLogger(__name__)
 
     tout=self.tout
-
+       
     while tout > 0 :
         rq=self.s.get(self.url+
                       ('imageengine-request.php?jid=%d&type=%d' %
@@ -367,11 +375,10 @@ def get_obs_processed(self: Telescope, obs=None, cube=False):
 
         soup = BeautifulSoup(rq.text,'lxml')
         dlif=soup.find('iframe')
-
         try :
             dl=dlif.get('src')
             rq=self.s.get(self.url+dl,stream=True)
-            return StringIO(rq.content) if cube else ZipFile(StringIO(rq.content))
+            return BytesIO(rq.content) if cube else ZipFile(BytesIO(rq.content))
 
         except AttributeError :
             tout-=self.retry
