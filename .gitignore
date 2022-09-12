@@ -135,5 +135,8 @@ sidebar.yml
 # Telescope config
 telescope.ini
 
+# Processing output
+OUT/
+
 
 /.quarto/
