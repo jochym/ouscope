@@ -10,7 +10,9 @@ from requests import session
 import configparser
 from os.path import expanduser
 import diskcache
+from bs4 import BeautifulSoup
 import json
+import time
 
 # %% ../00_core.ipynb 4
 def cleanup(s):
@@ -61,3 +63,143 @@ class Telescope:
         self.login()
         self.cache=cache
 
+
+# %% ../00_core.ipynb 6
+@patch
+def login(self: Telescope):
+    log = logging.getLogger(__name__)
+    payload = {'action': 'login',
+               'username': self.user,
+               'password': self.passwd,
+               'stayloggedin': 'true'}
+    log.debug('Get session ...')
+    self.s=session()
+    log.debug('Logging in ...')
+    self.s.post(self.url+'login.php', data=payload)
+
+# %% ../00_core.ipynb 7
+@patch
+def logout(self: Telescope):
+    if self.s is None :
+        self.s.post(self.url+'logout.php')
+        self.s=None
+
+# %% ../00_core.ipynb 9
+@patch
+def get_user_requests(self: Telescope, sort='rid', folder=1):
+    '''
+    Get all user requests from folder (Inbox=1 by default),
+    sorted by sort column ('rid' by default). 
+    Possible sort columns are: 'rid', 'object', 'completion'
+    The data is returned as a list of dictionaries.
+    '''
+
+    #fetch first batch        
+    params={
+        'limit': 100,
+        'sort': sort,
+        'folderid': folder}
+
+    rq = self.s.post(self.url+"api-user.php", {'module': "request-manager", 
+                                               'request': "1-get-list-own",
+                                               'params' : json.dumps(params)})
+    res=[]
+    dat=json.loads(rq.content)
+    total=int(dat['data']['totalRequests'])
+    res+=dat['data']['requests']
+
+    # Fetch the rest
+    params['limit']=total-len(res)
+    params['startAfterRow']=len(res)
+    rq = self.s.post(self.url+"api-user.php", {'module': "request-manager", 
+                                               'request': "1-get-list-own",
+                                               'params' : json.dumps(params)})
+
+    dat=json.loads(rq.content)
+    total=int(dat['data']['totalRequests'])
+    res+=dat['data']['requests']
+    return res
+
+# %% ../00_core.ipynb 11
+@patch
+def get_user_folders(self: Telescope):
+    '''
+    Get all user folders. Returns list of dictionaries.
+    '''
+    rq = self.s.post(self.url+"api-user.php", {'module': "request-manager", 
+                                               'request': "0-get-my-folders"})
+    return json.loads(rq.content)['data']
+
+# %% ../00_core.ipynb 13
+@patch
+def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=16, minute=0):
+    '''Get the dt days of observations taken no later then time in t.
+
+        Input
+        ------
+        t  - end time in seconds from the epoch
+            (as returned by time.time())
+        dt - number of days, default to 1
+        filtertype - filter by type of filter used
+        camera - filter by the camera/telescope used
+
+        Output
+        ------
+        Returns a list of JobIDs (int) for the observations.
+
+    '''
+
+    assert(self.s is not None)
+
+    if t is None :
+        t=time.time()-time.timezone
+
+
+    st=time.gmtime(t-86400*dt)
+    et=time.gmtime(t)
+
+    d=st.tm_mday
+    m=st.tm_mon
+    y=st.tm_year
+    de=et.tm_mday
+    me=et.tm_mon
+    ye=et.tm_year
+
+    log = logging.getLogger(__name__)
+    log.debug('%d/%d/%d -> %d/%d/%d', d,m,y,de,me,ye)
+
+    try :
+        telescope=self.cameratypes[camera.lower()]
+    except KeyError:
+        telescope=''
+
+    searchdat = {
+        'sort1':'completetime',
+        'sort1order':'desc',
+        'searchearliestcom[]':[d, m, y, str(hour),str(minute)],
+        'searchlatestcom[]':  [de,me,ye,str(hour),str(minute)],
+        'searchstatus[]':['1'],
+        'resultsperpage':'1000',
+        'searchfilter':filtertype,
+        'searchtelescope':telescope,
+        'submit':'Go'
+    }
+
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+
+
+    request = self.s.post(self.url+'v3job-search-query.php',
+                     data=searchdat, headers=headers)
+    soup = BeautifulSoup(request.text,'lxml')
+
+    jlst=[]
+    for l in soup.findAll('tr'):
+        try :
+            a=l.find('a').get('href')
+        except AttributeError :
+            continue
+        jid=a.rfind('jid')
+        if jid>0 :
+            jid=a[jid+4:].split('&')[0]
+            jlst.append(int(jid))
+    return jlst
