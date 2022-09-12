@@ -139,16 +139,16 @@ def get_user_folders(self: Telescope):
 def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=16, minute=0):
     '''Get the dt days of observations taken no later then time in t.
 
-        Input
-        ------
+        ### Input
+        
         t  - end time in seconds from the epoch
             (as returned by time.time())
         dt - number of days, default to 1
         filtertype - filter by type of filter used
         camera - filter by the camera/telescope used
 
-        Output
-        ------
+        ### Output
+        
         Returns a list of JobIDs (int) for the observations.
 
     '''
