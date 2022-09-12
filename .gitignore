@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+_docs/
+sidebar.yml
+_docs/
+sidebar.yml
