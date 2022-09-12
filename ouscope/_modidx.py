@@ -6,4 +6,5 @@ d = { 'settings': { 'branch': 'main',
                 'git_url': 'https://github.com/jochym/ouscope/tree/main/',
                 'lib_path': 'ouscope'},
   'syms': { 'ouscope.core': { 'ouscope.core.Telescope': ('core.html#telescope', 'ouscope/core.py'),
-                              'ouscope.core.Telescope.__init__': ('core.html#__init__', 'ouscope/core.py')}}}
+                              'ouscope.core.Telescope.__init__': ('core.html#__init__', 'ouscope/core.py'),
+                              'ouscope.core.cleanup': ('core.html#cleanup', 'ouscope/core.py')}}}

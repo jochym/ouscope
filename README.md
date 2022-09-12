@@ -20,7 +20,13 @@ prohibiting additional modules intended for different fields
 
 ## Install
 
+### From PyPI
+
 `pip install ouscope`
+
+### From conda
+
+`conda install ouscaope`
 
 ## How to use
 

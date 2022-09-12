@@ -4,9 +4,60 @@
 __all__ = ['Telescope']
 
 # %% ../00_core.ipynb 3
+import logging
+import requests
+from requests import session
+import configparser
+from os.path import expanduser
+import diskcache
+import json
+
+# %% ../00_core.ipynb 4
+def cleanup(s):
+    return s.encode('ascii','ignore').decode('ascii','ignore')
+
+# %% ../00_core.ipynb 5
 class Telescope:
     '''
     Main API class
     '''
-    def __init__(self):
-        pass
+    
+    url='https://www.telescope.org/'
+    cameratypes={
+        'constellation':'1',
+        'galaxy':       '2',
+        'cluster':      '3',
+        'planet':'5',
+        'coast':'6',
+        'pirate':'7',
+    }
+
+    REQUESTSTATUS_TEXTS={
+        1: "New",
+        2: "New, allocated",
+        3: "Waiting",
+        4: "In progress",
+        5: "Reallocate",
+        6: "Waiting again",
+        7: "Complete on site",
+        8: "Complete",
+        9: "Hold",
+        10: "Frozen",
+        20: "Expired",
+        21: "Expired w/CJobs",
+        22: "Cancelled",
+        23: "Cancelled w/CJobs",
+        24: "Invalid",
+        25: "Never rises",
+        26: "Other error",
+    }
+    
+    def __init__(self, user, passwd, cache='.cache/jobs'):
+        self.s=None
+        self.user=user
+        self.passwd=passwd
+        self.tout=60
+        self.retry=15
+        self.login()
+        self.cache=cache
+

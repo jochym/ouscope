@@ -1,0 +1,13 @@
+[cache]
+wcs=.cache/wcs
+jobs=.cache/jobs
+seq=.cache/seq
+
+[telescope.org]
+user=username
+password=password
+
+[astrometry.net]
+apikey=api_key_for_astrometry_net
+
+
