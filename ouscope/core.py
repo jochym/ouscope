@@ -17,6 +17,7 @@ import os, tempfile, shutil
 from os import path
 from zipfile import ZipFile, BadZipFile
 from io import StringIO, BytesIO
+from tqdm.auto import tqdm
 
 # %% ../10_core.ipynb 3
 def cleanup(s):
@@ -250,7 +251,7 @@ def get_job(self: Telescope, jid=None):
 
 # %% ../10_core.ipynb 16
 @patch
-def download_obs(self: Telescope, obs=None, directory='.', cube=True):
+def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False):
     '''Download the raw observation obs (obtained from get_job) into 3D fits
     file named jid.fits located in the directory (current by default).
     Alternatively, when the cube=False the file will be a zip of 3 fits files.
@@ -267,21 +268,37 @@ def download_obs(self: Telescope, obs=None, directory='.', cube=True):
         print('The zip output is no longer supported!')
         return None
     
+    chunksize = 1024
     rq=self.s.get(self.url+
                   ('v3image-download%s.php?jid=%d' %
                     ('' if cube else '-layers', obs['jid'])),
                   stream=True)
-
+    
+    size = int(rq.headers.get('Content-Length', 0))
+    tq = None
     fn = ('%(jid)d.' % obs) + ('fits' if cube else 'zip')
+    if pbar :
+        tq = tqdm(desc=fn,       
+                  total=size,       
+                  unit="B",       
+                  unit_scale=True,        
+                  leave=True,       
+                  miniters=1)
+    
     with open(path.join(directory, fn), 'wb') as fd:
-        for chunk in rq.iter_content(512):
-            fd.write(chunk)
+        for chunk in rq.iter_content(chunksize):
+            if chunk:
+                fd.write(chunk)
+                if tq :
+                    tq.update(len(chunk))
+    if tq :
+        tq.close()
     return fn
 
 
 # %% ../10_core.ipynb 18
 @patch
-def get_obs(self: Telescope, obs=None, cube=True, recurse=True):
+def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False):
     '''Get the raw observation obs (obtained from get_job) into zip
     file-like object. The function returns ZipFile structure of the
     downloaded data.'''
@@ -296,7 +313,7 @@ def get_obs(self: Telescope, obs=None, cube=True, recurse=True):
     if not path.isfile(fp) :
         log.info('Getting %s from server', fp)
         os.makedirs(path.dirname(fp), exist_ok=True)
-        self.download_obs(obs,path.dirname(fp),cube)
+        self.download_obs(obs,path.dirname(fp),cube=cube,pbar=pbar)
     else :
         log.info('Getting %s from cache', fp)
     content = open(fp,'rb')
@@ -314,7 +331,7 @@ def get_obs(self: Telescope, obs=None, cube=True, recurse=True):
 
 # %% ../10_core.ipynb 20
 @patch
-def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False):
+def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False, pbar=False):
     '''Download the raw observation obs (obtained from get_job) into zip
     file named job_jid.zip located in the directory (current by default).
     Alternatively, when the cube=True the file will be a 3D fits file.
@@ -328,7 +345,9 @@ def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False)
     fn=None
 
     tout=self.tout
-
+    tq = None
+    chunksize = 1024
+ 
     while tout > 0 :
         rq=self.s.get(self.url+
                       ('imageengine-request.php?jid=%d&type=%d' %
@@ -340,11 +359,25 @@ def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False)
         try :
             dl=dlif.get('src')
             rq=self.s.get(self.url+dl,stream=True)
-
+            size = int(rq.headers.get('Content-Length', 0))
             fn = ('art_%(jid)d.' % obs) + ('fits' if cube else 'zip')
+
+            if pbar :
+                tq = tqdm(desc=fn,       
+                          total=size,       
+                          unit="B",       
+                          unit_scale=True,        
+                          leave=True,       
+                          miniters=1)
+
             with open(path.join(directory, fn), 'wb') as fd:
-                for chunk in rq.iter_content(512):
+                for chunk in rq.iter_content(chunksize):
                     fd.write(chunk)
+                    if tq :
+                        tq.update(len(chunk))
+                    
+            if tq: 
+                tq.close()
             return fn
         except AttributeError :
             tout-=self.retry
