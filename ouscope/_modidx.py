@@ -17,5 +17,5 @@ d = { 'settings': { 'branch': 'main',
                               'ouscope.core.Telescope.get_user_folders': ('core.html#telescope.get_user_folders', 'ouscope/core.py'),
                               'ouscope.core.Telescope.get_user_requests': ('core.html#telescope.get_user_requests', 'ouscope/core.py'),
                               'ouscope.core.Telescope.login': ('core.html#telescope.login', 'ouscope/core.py'),
-                              'ouscope.core.Telescope.logout': ('core.html#telescope.logout', 'ouscope/core.py'),
-                              'ouscope.core.cleanup': ('core.html#cleanup', 'ouscope/core.py')}}}
+                              'ouscope.core.Telescope.logout': ('core.html#telescope.logout', 'ouscope/core.py')},
+            'ouscope.util': {'ouscope.util.cleanup': ('util.html#cleanup', 'ouscope/util.py')}}}
