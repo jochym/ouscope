@@ -7,7 +7,6 @@ from __future__ import annotations
 __all__ = ['Telescope']
 
 # %% ../10_core.ipynb 3
-# from __future__ import annotations
 from fastcore.basics import patch
 
 import logging
@@ -106,7 +105,7 @@ def logout(self: Telescope):
 # %% ../10_core.ipynb 11
 @patch
 def get_user_requests(self: Telescope, 
-                      folder: int =1,    # Number of the listed folder. Inbox=1.
+                      folder: int =1,    # Id of the listed folder. Inbox=1.
                       sort : str ='rid', # Name of the sorting colum: 'rid', 'object' or 'completion'
                       ) -> list(dict):   # List of dictionaries representing the requests.
     '''
@@ -154,7 +153,7 @@ def get_user_folders(self: Telescope):
 
 # %% ../10_core.ipynb 15
 @patch
-def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=16, minute=0):
+def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=16, minute=0, verb=False):
     '''Get the dt days of observations taken no later then time in t.
 
         ### Input
@@ -214,6 +213,19 @@ def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=1
                      data=searchdat, headers=headers)
     soup = BeautifulSoup(request.text,'lxml')
 
+    if verb:
+        for h in soup.findAll('h3'):
+            if 'Parameters' in h.text:
+                print('Params:')
+                for l in h.find_next_sibling().get_text(strip=True, separator='\n').splitlines():
+                    print(l)
+            elif 'Results' in h.text:
+                p = h.find_next_sibling()
+                if 'jobs' in p.text:
+                    print('Results:')
+                    for l in h.find_next_sibling().get_text(strip=True, separator='\n').splitlines():
+                        print(l)
+    
     jlst=[]
     for l in soup.findAll('tr'):
         try :
