@@ -143,6 +143,24 @@ def get_user_requests(self: Telescope,
 
 # %% ../10_core.ipynb 13
 @patch
+def get_jid_for_req(self:Telescope, req=None):
+    if req is not None:
+        try: 
+            id = req['id']
+        except TypeError:
+            id = req
+    rq = self.s.post(self.url+"v4request-view.php?" + f'rid={id}')
+    soup = BeautifulSoup(rq.text,'lxml')
+    for blk in soup.find_all('script'):
+        if "var info = " in blk.text:
+            for l in  blk.text.split('\n'):
+                if "var info = " in l:
+                    l = l[l.find('{'):l.rfind('}')+1]
+                    return json.loads(l)['jid']
+    return None
+
+# %% ../10_core.ipynb 15
+@patch
 def get_user_folders(self: Telescope):
     '''
     Get all user folders. Returns list of dictionaries.
@@ -151,7 +169,7 @@ def get_user_folders(self: Telescope):
                                                'request': "0-get-my-folders"})
     return json.loads(rq.content)['data']
 
-# %% ../10_core.ipynb 15
+# %% ../10_core.ipynb 17
 @patch
 def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=16, minute=0, verb=False):
     '''Get the dt days of observations taken no later then time in t.
@@ -238,7 +256,7 @@ def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=1
             jlst.append(int(jid))
     return jlst
 
-# %% ../10_core.ipynb 17
+# %% ../10_core.ipynb 19
 @patch
 def get_job(self: Telescope, jid=None):
     '''Get a job data for a given JID'''
@@ -278,7 +296,7 @@ def get_job(self: Telescope, jid=None):
 
     return obs
 
-# %% ../10_core.ipynb 19
+# %% ../10_core.ipynb 21
 @patch
 def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False):
     '''Download the raw observation obs (obtained from get_job) into 3D fits
@@ -325,7 +343,7 @@ def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False
     return fn
 
 
-# %% ../10_core.ipynb 21
+# %% ../10_core.ipynb 23
 @patch
 def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False):
     '''Get the raw observation obs (obtained from get_job) into zip
@@ -358,7 +376,7 @@ def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False):
             return None
 
 
-# %% ../10_core.ipynb 23
+# %% ../10_core.ipynb 25
 @patch
 def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False, pbar=False):
     '''Download the raw observation obs (obtained from get_job) into zip
@@ -417,7 +435,7 @@ def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False,
 
 
 
-# %% ../10_core.ipynb 25
+# %% ../10_core.ipynb 27
 @patch
 def get_obs_processed(self: Telescope, obs=None, cube=False):
     '''Get the raw observation obs (obtained from get_job) into zip
