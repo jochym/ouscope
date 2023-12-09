@@ -17,8 +17,8 @@ import configparser
 import diskcache
 from bs4 import BeautifulSoup
 import json
-import time
-import os, tempfile, shutil
+import time, datetime
+import os, tempfile, shutil, sys
 from os import path
 from os.path import expanduser
 
@@ -102,7 +102,26 @@ def logout(self: Telescope):
         self.s.post(self.url+'logout.php')
         self.s=None
 
-# %% ../10_core.ipynb 11
+# %% ../10_core.ipynb 12
+@patch
+def do_api_call(self: Telescope, module, req, params=None):
+    rq = self.s.post(self.url+"api-user.php", {'module': module,
+                                               'request': req,
+                                               'params': {} if params is None else json.dumps(params)})
+    return json.loads(rq.content)
+
+#| exporti
+@patch
+def do_rm_api(self: Telescope, req, params=None):
+    return self.do_api_call("request-manager", req, params)
+
+
+#| exporti
+@patch
+def do_rc_api(self: Telescope, req, params=None):
+    return self.do_api_call("request-constructor", req, params)
+
+# %% ../10_core.ipynb 13
 @patch
 def get_user_requests(self: Telescope, 
                       folder: int =1,    # Id of the listed folder. Inbox=1.
@@ -141,12 +160,26 @@ def get_user_requests(self: Telescope,
     res+=dat['data']['requests']
     return res
 
-# %% ../10_core.ipynb 13
+# %% ../10_core.ipynb 15
 @patch
-def get_jid_for_req(self:Telescope, req=None):
+def get_jid_for_req(self:Telescope, req=None) -> int:
+    '''
+    Find and output jobID for the request.
+    If request is not yet done returns False.
+
+    ### Input
+    
+    req : request dictionary or requestid
+
+    ### Output
+
+    JobID if the request is completed, otherwise False
+    '''
     if req is not None:
         try: 
             id = req['id']
+            if req['status'] != '8':
+                return None
         except TypeError:
             id = req
     rq = self.s.post(self.url+"v4request-view.php?" + f'rid={id}')
@@ -159,7 +192,7 @@ def get_jid_for_req(self:Telescope, req=None):
                     return json.loads(l)['jid']
     return None
 
-# %% ../10_core.ipynb 15
+# %% ../10_core.ipynb 17
 @patch
 def get_user_folders(self: Telescope):
     '''
@@ -169,7 +202,7 @@ def get_user_folders(self: Telescope):
                                                'request': "0-get-my-folders"})
     return json.loads(rq.content)['data']
 
-# %% ../10_core.ipynb 17
+# %% ../10_core.ipynb 19
 @patch
 def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=16, minute=0, verb=False):
     '''Get the dt days of observations taken no later then time in t.
@@ -256,7 +289,7 @@ def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=1
             jlst.append(int(jid))
     return jlst
 
-# %% ../10_core.ipynb 19
+# %% ../10_core.ipynb 21
 @patch
 def get_job(self: Telescope, jid=None):
     '''Get a job data for a given JID'''
@@ -269,12 +302,15 @@ def get_job(self: Telescope, jid=None):
 
     obs={}
     obs['jid']=jid
-    rq=self.s.post(self.url+('v3cjob-view.php?jid=%d' % jid))
+    # rq=self.s.post(self.url+('v3cjob-view.php?jid=%d' % jid))
+    rq=self.s.post(self.url+('v4request-view.php?jid=%d' % jid))
     soup = BeautifulSoup(rq.text, 'lxml')
     for l in soup.findAll('tr'):
         log.debug(cleanup(l.text))
         txt=''
         for f in l.findAll('td'):
+            if txt.find('Request ID') >= 0:
+                obs['rid']=f.text[1:]            
             if txt.find('Object Type') >= 0:
                 obs['type']=f.text
             if txt.find('Object ID') >= 0:
@@ -292,38 +328,112 @@ def get_job(self: Telescope, jid=None):
                 obs['status']= (f.text == 'Success')
 
             txt=f.text
+    for l in soup.findAll('button'):
+        if l.get('onclick')is not None and ('dl-flat' in l.get('onclick')):
+            obs['flatid']=int(l.get('onclick').split('=')[-1][:-1])
+            break
     log.info('%(jid)d [%(tele)s, %(filter)s, %(status)s]: %(type)s %(oid)s %(exp)s', obs)
 
     return obs
 
-# %% ../10_core.ipynb 21
+# %% ../10_core.ipynb 24
 @patch
-def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False):
-    '''Download the raw observation obs (obtained from get_job) into 3D fits
-    file named jid.fits located in the directory (current by default).
-    Alternatively, when the cube=False the file will be a zip of 3 fits files.
-    The name of the file (without directory) is returned.
-    
-    The zip API got dropped from telescope.org and it stoped working. 
-    
-    '''
+def get_request(self: Telescope, rid=None):
+    '''Get request data for a given RID'''
+
+    assert(rid is not None)
+    assert(self.s is not None)
+
+    log = logging.getLogger(__name__)
+    log.debug(rid)
+
+    obs={}
+    obs['rid']=rid
+    #rq=self.s.post(self.url+('v3cjob-view.php?jid=%d' % jid))
+    rq=self.s.post(self.url+('v4request-view.php?rid=%d' % rid))
+    soup = BeautifulSoup(rq.text, 'lxml')
+    for l in soup.findAll('tr'):
+        log.debug(cleanup(l.text))
+        txt=''
+        for f in l.findAll('td'):
+            if txt.find('Job ID') >= 0:
+                obs['jid']=f.text[1:]
+            if txt.find('Object Type') >= 0:
+                obs['type']=f.text
+            if txt.find('Object ID') >= 0:
+                obs['oid']=f.text
+            if txt.find('Object Name') >= 0:
+                obs['name']=f.text
+            if txt.find('Telescope Type Name') >= 0:
+                obs['tele_type']=f.text
+            if txt.find('Telescope Name') >= 0:
+                obs['tele']=f.text
+            if txt.find('Filter Type') >= 0:
+                obs['filter']=f.text
+            if txt.find('Dark Frame') >= 0:
+                obs['dark']=f.text
+            if txt.find('Exposure Time') >= 0:
+                obs['exp']=f.text
+            if txt.find('Request Time') >= 0:
+                t=f.text.split()
+                obs['requested']=t[3:6]+[t[6][1:]]+[t[7][:-1]]
+            if txt.find('Completion Time') >= 0:
+                t=f.text.split()
+                obs['completion']=t[3:6]+[t[6][1:]]+[t[7][:-1]]
+            if txt.find('Status') >= 0:
+                obs['status']= f.text.strip() #(f.text == 'Success')
+
+            txt=f.text
+    for l in soup.findAll('a'):
+        if l.get('href')is not None and ('dl-flat' in l.get('href')):
+            obs['flatid']=int(l.get('href').split('=')[1])
+            break
+    log.info('%(jid)d [%(tele)s, %(filter)s, %(status)s]: %(type)s %(oid)s %(exp)s', obs)
+
+    return obs    
+
+# %% ../10_core.ipynb 26
+@patch
+def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False, verbose=False):
+    '''Download the raw observation obs (obtained from get_job) into zip
+    file named job_jid.zip located in the directory (current by default).
+    Alternatively, when the cube=True the file will be a 3D fits file.
+    The name of the file (without directory) is returned.'''
 
     assert(obs is not None)
     assert(self.s is not None)
 
-    if not cube:
-        print('The zip output is no longer supported!')
-        return None
-    
     chunksize = 1024
-    rq=self.s.get(self.url+
-                  ('v3image-download%s.php?jid=%d' %
-                    ('' if cube else '-layers', obs['jid'])),
+    tq = None
+
+    payload = {'jid': obs['jid']}
+    if 'flatid' in obs :
+        payload['flatid']=obs['flatid']
+    
+    rsp = self.do_api_call("image-engine", 
+                           "0-create-dl" + ("3d" if cube else "zip"), payload)
+    ieid = rsp['data']['ieID']
+
+    n=0    
+    while rsp['status']!='READY' :
+        if verbose:
+            print(f"{rsp['status']:30}", end='\n')
+        time.sleep(2)
+        n+=1
+        rsp = self.do_api_call("image-engine", "0-is-job-ready", {'ieid':ieid,})
+        if n>30:
+            raise TimeoutError
+    
+    if verbose:
+        print(f"{rsp['status']:30}")
+        sys.stdout.flush()
+    
+    rq=self.s.get(self.url+f'v3image-download.php?jid={obs["jid"]}&ieid={ieid}', 
                   stream=True)
     
     size = int(rq.headers.get('Content-Length', 0))
-    tq = None
     fn = ('%(jid)d.' % obs) + ('fits' if cube else 'zip')
+    siz = int(rsp['data']['fitssize' if cube else 'fitsbzsize'])
     if pbar :
         tq = tqdm(desc=fn,       
                   total=size,       
@@ -331,8 +441,8 @@ def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False
                   unit_scale=True,        
                   leave=True,       
                   miniters=1)
-    
-    with open(path.join(directory, fn), 'wb') as fd:
+
+    with open(os.path.join(directory, fn), 'wb') as fd:
         for chunk in rq.iter_content(chunksize):
             if chunk:
                 fd.write(chunk)
@@ -340,12 +450,15 @@ def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False
                     tq.update(len(chunk))
     if tq :
         tq.close()
-    return fn
+    sys.stdout.flush()
+    if siz==os.stat(os.path.join(directory, fn)).st_size :
+        return fn
+    else:
+        return None
 
-
-# %% ../10_core.ipynb 23
+# %% ../10_core.ipynb 28
 @patch
-def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False):
+def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False, verbose=False):
     '''Get the raw observation obs (obtained from get_job) into zip
     file-like object. The function returns ZipFile structure of the
     downloaded data.'''
@@ -360,7 +473,7 @@ def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False):
     if not path.isfile(fp) :
         log.info('Getting %s from server', fp)
         os.makedirs(path.dirname(fp), exist_ok=True)
-        self.download_obs(obs,path.dirname(fp),cube=cube,pbar=pbar)
+        self.download_obs(obs,path.dirname(fp),cube=cube,pbar=pbar,verbose=verbose)
     else :
         log.info('Getting %s from cache', fp)
     content = open(fp,'rb')
@@ -376,7 +489,7 @@ def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False):
             return None
 
 
-# %% ../10_core.ipynb 25
+# %% ../10_core.ipynb 31
 @patch
 def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False, pbar=False):
     '''Download the raw observation obs (obtained from get_job) into zip
@@ -435,7 +548,7 @@ def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False,
 
 
 
-# %% ../10_core.ipynb 27
+# %% ../10_core.ipynb 33
 @patch
 def get_obs_processed(self: Telescope, obs=None, cube=False):
     '''Get the raw observation obs (obtained from get_job) into zip
@@ -467,3 +580,136 @@ def get_obs_processed(self: Telescope, obs=None, cube=False):
 
     return None
 
+
+# %% ../10_core.ipynb 37
+@patch
+def submit_job_api(self: Telescope, obj, exposure=30000, tele='COAST',
+                    filt='BVR', darkframe=True,
+                    name='RaDec object', comment='AutoSubmit'):
+    assert(self.s is not None)
+
+    log = logging.getLogger(__name__)
+
+    ra=obj.ra.to_string(unit='hour', sep=':', pad=True, precision=2,
+                        alwayssign=False)
+    dec=obj.dec.to_string(sep=':', pad=True, precision=2,
+                        alwayssign=True)
+    try :
+        tele=self.cameratypes[tele.lower()]
+    except KeyError :
+        log.warning('Wrong telescope: %d ; selecting COAST(6)', tele)
+        tele=6
+
+    if tele==7 :
+        if filt=='BVR' : filt='Colour'
+        if filt=='B' : filt='Blue'
+        if filt=='V' : filt='Green'
+        if filt=='R' : filt='Red'
+    if tele==6 :
+        if filt=='Colour' : filt='BVR'
+        if filt=='Blue' : filt='B'
+        if filt=='Green' : filt='V'
+        if filt=='Red' : filt='R'
+
+    params = {'telescopeid': tele, 'telescopetype': 2,
+              'exposuretime': exposure, 'filtertype': filt,
+              'objecttype': 'RADEC', 'objectname': name,
+              'objectid': ra+' '+dec, 'usercomments': comment }
+
+    self.do_rc_api("0-rb-clear")
+
+    r = self.do_rc_api("0-rb-set", params)
+    log.debug('Req data:%s', r)
+    if r['success'] :
+        r = self.do_rc_api("0-rb-submit")
+        log.debug('Submission data:%s', r)
+    if r['success'] :
+        return True, r['data']['id']
+    else :
+        log.warning('Submission error. Status:%s', r['status'])
+        return False, r['status']
+
+# %% ../10_core.ipynb 38
+@patch
+def submit_RADEC_job(self: Telescope, obj, exposure=30000, tele='COAST',
+                    filt='BVR', darkframe=True,
+                    name='RaDec object', comment='AutoSubmit'):
+    assert(self.s is not None)
+
+    log = logging.getLogger(__name__)
+
+    ra=obj.ra.to_string(unit='hour', sep=' ',
+                        pad=True, precision=2,
+                        alwayssign=False).split()
+    dec=obj.dec.to_string(sep=' ',
+                        pad=True, precision=2,
+                        alwayssign=True).split()
+    try :
+        tele=self.cameratypes[tele.lower()]
+    except KeyError :
+        log.warning('Wrong telescope: %d ; selecting COAST(6)', tele)
+        tele=6
+
+    if tele==7 :
+        if filt=='BVR' : filt='Colour'
+        if filt=='B' : filt='Blue'
+        if filt=='V' : filt='Green'
+        if filt=='R' : filt='Red'
+    if tele==6 :
+        if filt=='Colour' : filt='BVR'
+        if filt=='Blue' : filt='B'
+        if filt=='Green' : filt='V'
+        if filt=='Red' : filt='R'
+
+    u=self.url+'/request-constructor.php'
+    r=self.s.get(u+'?action=new')
+    t=self.extract_ticket(r)
+    log.debug('GoTo Part 1 (ticket %s)', t)
+    r=self.s.post(u,data={'ticket':t,'action':'main-go-part1'})
+    t=self.extract_ticket(r)
+    log.debug('GoTo RADEC (ticket %s)', t)
+    r=self.s.post(u,data={'ticket':t,'action':'part1-go-radec'})
+    t=self.extract_ticket(r)
+    log.debug('Save RADEC (ticket %s)', t)
+    r=self.s.post(u,data={'ticket':t,'action':'part1-radec-save',
+                         'raHours':ra[0],
+                         'raMins':ra[1],
+                         'raSecs':ra[2].split('.')[0],
+                         'raFract':ra[2].split('.')[1],
+                         'decDegrees':dec[0],
+                         'decMins':dec[1],
+                         'decSecs':dec[2].split('.')[0],
+                         'decFract':dec[2].split('.')[1],
+                         'newObjectName':name})
+    t=self.extract_ticket(r)
+    log.debug('GoTo Part 2 (ticket %s)', t)
+    r=self.s.post(u,data={'ticket':t,'action':'main-go-part2'})
+    t=self.extract_ticket(r)
+    log.debug('Save Telescope (ticket %s)', t)
+    r=self.s.post(u,data={'ticket':t,
+                            'action':'part2-save',
+                            'submittype':'Save',
+                            'newTelescopeSelection':tele})
+    t=self.extract_ticket(r)
+    log.debug('GoTo Part 3 (ticket %s)', t)
+    r=self.s.post(u,data={'ticket':t,'action':'main-go-part3'})
+    t=self.extract_ticket(r)
+    log.debug('Save Exposure (ticket %s)', t)
+    r=self.s.post(u,data={'ticket':t,
+                            'action':'part3-save',
+                            'submittype':'Save',
+                            'newExposureTime':exposure,
+                            'newDarkFrame': 1 if darkframe else 0,
+                            'newFilterSelection':filt,
+                            'newRequestComments':comment})
+    t=self.extract_ticket(r)
+    log.debug('Submit (ticket %s)', t)
+    r=self.s.post(u,data={'ticket':t, 'action':'main-submit'})
+    return r
+
+# %% ../10_core.ipynb 39
+@patch
+def submitVarStar(self: Telescope, name, expos=90, filt='BVR',comm='', tele='COAST'):
+    o=SkyCoord.from_name(name)
+    return self.submit_job_api(o, name=name, comment=comm,
+                            exposure=expos*1000, filt=filt, tele=tele)
