@@ -24,7 +24,6 @@ The library is not ready but you can try to use it for some tasks. Here
 is a simple example.
 
 ``` python
-#local
 from ouscope.core import Telescope
 import configparser
 from os.path import expanduser
