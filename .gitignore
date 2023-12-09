@@ -138,5 +138,6 @@ telescope.ini
 # Processing output
 OUT/
 _proc/
-
+_docs/
+brt/
 /.quarto/
