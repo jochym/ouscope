@@ -7,8 +7,6 @@ __all__ = ['verts', 'codes', 'marker', 'plot_sequence', 'process_job', 'analyse_
 import configparser
 from fastcore.basics import patch
 from os.path import expanduser
-from astroquery.astrometry_net import AstrometryNet
-from astroquery.exceptions import TimeoutError as ASTTimeoutError
 from ouscope.core import Telescope
 from ouscope.solver import Solver
 

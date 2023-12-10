@@ -10,29 +10,91 @@ prohibiting additional modules intended for different fields
 
 ## Install
 
-### From PyPI
+The package is not yet published to pypi/conda, thus for now the only
+way to install it is the developer-style install. I recommend the
+following sequence:
 
-`pip install ouscope`
+``` bash
+git clone https://github.com/jochym/ouscope.git
+cd ouscope
+python3 -m venv venv 
+. venv/bin/activate
 
-### From conda
+pip install -e .
+```
 
-`conda install ouscaope`
+Later on you just go to the ouscope directory and run:
+
+``` bash
+. venv/bin/activate
+```
+
+to activate the virtual environment.
+
+### Update
+
+With developer install the upgrade is simple, `git pull` should do the
+trick :
+
+``` bash
+cd ouscope
+git pull
+```
+
+When the set of dependecies changes you may need to
+
+``` bash
+pip uninstall ouscope ; pip install -e .
+```
+
+to refresh your setup.
 
 ## How to use
 
-The library is not ready but you can try to use it for some tasks. Here
-is a simple example.
+The library is not ready but you can try to use it for some tasks.
+Before this example will run you need to have some additional setup:
+
+- Local AstrometryNet solver (`solve-field` command) installed and
+  configured. It is possible to use nova.astrometry.net solver but the
+  automatic interaction/switching is not complete yet. You can modify
+  the example to use it (see
+  [`Solver`](https://jochym.github.io/ouscope/solver.html#solver) docs
+  for some guidance)
+- The config file for your telescope.org account. The cache directories
+  will be created in the current working directory with this setup. You
+  may move them to some other place (e.g. `~/.cache/ouscope`):
+
+<!-- -->
+
+    [cache]
+    wcs=.cache/wcs
+    jobs=.cache/jobs
+    seq=.cache/seq
+
+    [telescope.org]
+    user=jour_user_name
+    password=your_password
+
+    [astrometry.net]
+    apikey=your_astrometry.net_api_key
+
+If it still does not work, please submit a github issue. I do not have
+many systems to test the library on. Below is a simple example.
+
+### Interacting with telescope.org
+
+The code below: - creates the
+[`Telescope`](https://jochym.github.io/ouscope/core.html#telescope)
+object `scope` - automatically logs-in to the user from the config
+file - lists user folders - gets user requests sorted by request ID
+(i.e. submission order) - goes over the list until five completed
+requests are listed - downloads the latest completed job into `obs`
+variable - prints JobID:RequestID, target name,
 
 ``` python
 from ouscope.core import Telescope
-import configparser
-from os.path import expanduser
 
-config = configparser.ConfigParser()
-config.read(expanduser('~/.config/telescope.ini'))
-
-scope=Telescope(config['telescope.org']['user'], 
-              config['telescope.org']['password'])
+scope=Telescope(config='~/.config/telescope.ini')
 
 print("User folders:")
 for f in scope.get_user_folders():
@@ -43,36 +105,142 @@ for f in scope.get_user_folders():
 
 reqlst=scope.get_user_requests(sort='rid')
 
-print(f'User {scope.user} has {len(reqlst)} requests.')
-print("The most recent completed requests:")
-
-n = 10
+print(f'\nUser {scope.user} has {len(reqlst)} requests.')
+print("\nThe most recent requests:")
+last_complete = None
+complete = []
+n = 5
 for rq in reqlst:
+    jid = scope.get_jid_for_req(rq)
+    print(f'{rq["id"]}: {rq["objectname"]:15} jid: {(jid if jid else ""):6}', end=' ')
+    print(f'{Telescope.REQUESTSTATUS_TEXTS[int(rq["status"])]}')
     if rq["status"]=='8':
-        print(f'{rq["id"]}: {rq["objectname"]:15} jid: {scope.get_jid_for_req(rq)}')
+        complete.append(jid)
+        if last_complete is None:
+            last_complete = jid
         n -= 1
     if n<0 :
         break
+print()
+
+jid = complete[0]
+# Let us show the newest job
+job = scope.get_job(int(jid))
+req = scope.get_request(int(job['rid']))
+target = req['name'].lstrip().rstrip()
+
+print('The latest complete job:')
+print(f'J{jid}:R{job["rid"]} ({target}) Completed at: {" ".join(job["completion"])}')
+
+obs = scope.get_obs(job, verbose=True)
 
 scope.logout()
 ```
 
     User folders:
-           Inbox (  1): 1700 items
+           Inbox (  1): 1704 items
       Favourites (  2):    0 items
          Archive (  3):  447 items
            Trash (  4):   63 items
         Complete (461):   13 items
-    User jochym has 1700 requests.
-    The most recent completed requests:
-    759483: LX Cyg          jid: 412518
-    759452: EQ Lyr          jid: 412488
-    759451: DQ Vul          jid: 412487
-    759450: DX Vul          jid: 412486
-    759449: V686 Cyg        jid: 412485
-    759448: IP Cyg          jid: 412484
-    759447: SS Cyg          jid: 412483
-    759446: CH Cyg          jid: 412482
-    759188: LX Cyg          jid: 412243
-    759066: SS Cyg          jid: 412131
-    759065: CH Cyg          jid: 412130
+
+    User jochym has 1704 requests.
+
+    The most recent requests:
+    759880: EQ Lyr          jid:        Waiting
+    759879: DQ Vul          jid:        Waiting
+    759878: V686 Cyg        jid:        Waiting
+    759877: IP Cyg          jid:        Waiting
+    759783: LX Cyg          jid:        Waiting
+    759782: DX Vul          jid:        Waiting
+    759781: SS Cyg          jid:        Waiting
+    759780: CH Cyg          jid:        Waiting
+    759658: EQ Lyr          jid: 412679 Complete
+    759655: DQ Vul          jid: 412676 Complete
+    759654: V686 Cyg        jid: 412675 Complete
+    759653: IP Cyg          jid: 412674 Complete
+    759483: LX Cyg          jid: 412518 Complete
+    759452: EQ Lyr          jid: 412488 Complete
+
+    The latest complete job:
+    J412679:R759658 (EQ Lyr) Completed at: 9 December 2023 19:36:32 UTC
+
+### Analysis of the data
+
+Let us plot and analyse the last completed job listed above.
+
+The code below: - opens the data downloaded above (`obs` variable) -
+plate-solves the resultings fits data (with local AstrometryNet
+solver) - creates WCS object from the solution - plots the RGB image of
+the data with RA-DEC grid - query the Vizier database for variable stars
+0.25 deg from center - mark all objects found on the picture
+
+``` python
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+from astroquery.vizier import Vizier
+import matplotlib.pyplot as plt
+from ouscope.solver import Solver
+from ouscope.process import make_color_image
+```
+
+``` python
+solver = Solver()
+
+hdu = fits.open(obs)[0]
+
+wcs_head = solver.solve(hdu, tout=30)
+wcs = WCS(wcs_head, naxis=2)
+wcs.printwcs()
+```
+
+    Getting A1E36A92 from cache
+    WCS Keywords
+
+    Number of WCS axes: 2
+    CTYPE : 'RA---TAN-SIP' 'DEC--TAN-SIP' 
+    CRVAL : 290.135756976 41.0252130636 
+    CRPIX : 153.755741119 558.506164551 
+    CD1_1 CD1_2  : -0.000466761461958 -3.93688498768e-06 
+    CD2_1 CD2_2  : -3.88592965771e-06 0.000466462440999 
+    NAXIS : 1536  1536  3
+
+    WARNING: FITSFixedWarning: EPOCH = 'REAL' 
+    a floating-point value was expected. [astropy.wcs.wcs]
+    WARNING: FITSFixedWarning: RADECSYS= 'ICRS' 
+    the RADECSYS keyword is deprecated, use RADESYSa. [astropy.wcs.wcs]
+
+``` python
+fig = plt.figure(figsize=(8,8))
+ax = plt.subplot(projection=wcs)
+plt.grid(color='white', ls='solid', lw=0.5)
+
+# crop the data to remove overscan noise
+l, r, t, b = (0, 32, 0, 32)
+plt.imshow(make_color_image(hdu.data[:, l:-r, t:-b],
+                            order=hdu.header["FILTER"].split(",")))
+
+center = wcs.pixel_to_world(wcs_head['NAXIS1']/2,wcs_head['NAXIS2']/2)
+objects = Vizier.query_region(catalog='B/gcvs', 
+                             coordinates=center, 
+                             radius='0.25deg')
+for g in objects:
+    for n, o in enumerate(g):
+        name = o['VarName']
+        radec = SkyCoord(o['RAJ2000'] + o['DEJ2000'], 
+                         frame='icrs', unit=(u.hourangle, u.deg))
+        ax.scatter([radec.ra.deg, radec.ra.deg], 
+                   [radec.dec.deg-0.01, radec.dec.deg+0.01], 
+                   marker='|', s=30,
+                   color='white',
+                   transform=ax.get_transform('world'))
+        ax.text(radec.ra.deg, radec.dec.deg+0.014, 
+                f'{name} ({o["magMax"]:.1f})', 
+                transform=ax.get_transform('world'), color='white')
+```
+
+![](index_files/figure-commonmark/cell-5-output-1.png)
+
+### List of objects (variable stars) in the frame

@@ -10,7 +10,6 @@ from fastcore.basics import patch
 from os.path import expanduser
 import os, tempfile, shutil
 from io import StringIO, BytesIO
-from astroquery.astrometry_net import AstrometryNet
 from astroquery.exceptions import TimeoutError as ASTTimeoutError
 from astropy.time import Time
 from astropy.io import fits
@@ -50,9 +49,11 @@ class Solver:
         else:
             self._args = args
         self._cmd = ' '.join((self._cmd, self._args))
-        self.ast = AstrometryNet()
+        self.ast = None
         self.api_key = api_key
         if api_key:
+            from astroquery.astrometry_net import AstrometryNet
+            self.ast = AstrometryNet()    
             self.ast.api_key = api_key
         self._cache = cache
         self._tout = 15
