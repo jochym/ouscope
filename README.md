@@ -91,6 +91,9 @@ file - lists user folders - gets user requests sorted by request ID
 requests are listed - downloads the latest completed job into `obs`
 variable - prints JobID:RequestID, target name,
 
+<details>
+<summary>Code</summary>
+
 ``` python
 from ouscope.core import Telescope
 
@@ -137,6 +140,8 @@ obs = scope.get_obs(job, verbose=True)
 scope.logout()
 ```
 
+</details>
+
     User folders:
            Inbox (  1): 1704 items
       Favourites (  2):    0 items
@@ -175,6 +180,9 @@ solver) - creates WCS object from the solution - plots the RGB image of
 the data with RA-DEC grid - query the Vizier database for variable stars
 0.25 deg from center - mark all objects found on the picture
 
+<details>
+<summary>Code</summary>
+
 ``` python
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -186,6 +194,10 @@ from ouscope.solver import Solver
 from ouscope.process import make_color_image
 ```
 
+</details>
+<details>
+<summary>Code</summary>
+
 ``` python
 solver = Solver()
 
@@ -195,6 +207,8 @@ wcs_head = solver.solve(hdu, tout=30)
 wcs = WCS(wcs_head, naxis=2)
 wcs.printwcs()
 ```
+
+</details>
 
     Getting A1E36A92 from cache
     WCS Keywords
@@ -211,6 +225,9 @@ wcs.printwcs()
     a floating-point value was expected. [astropy.wcs.wcs]
     WARNING: FITSFixedWarning: RADECSYS= 'ICRS' 
     the RADECSYS keyword is deprecated, use RADESYSa. [astropy.wcs.wcs]
+
+<details>
+<summary>Code</summary>
 
 ``` python
 fig = plt.figure(figsize=(8,8))
@@ -241,6 +258,16 @@ for g in objects:
                 transform=ax.get_transform('world'), color='white')
 ```
 
+</details>
+
 ![](index_files/figure-commonmark/cell-5-output-1.png)
 
 ### List of objects (variable stars) in the frame
+
+<div><i>Table length=1</i>
+<table id="table140661408332432" class="table-striped table-bordered table-condensed">
+<thead><tr><th>GCVS</th><th>n_GCVS</th><th>RAJ2000</th><th>DEJ2000</th><th>VarType</th><th>magMax</th><th>Period</th><th>SpType</th><th>Exists</th><th>VarName</th><th>Simbad</th></tr></thead>
+<thead><tr><th></th><th></th><th></th><th></th><th></th><th>mag</th><th>d</th><th></th><th></th><th></th><th></th></tr></thead>
+<thead><tr><th>str10</th><th>str1</th><th>str11</th><th>str11</th><th>str10</th><th>float32</th><th>float64</th><th>str17</th><th>str12</th><th>str11</th><th>str6</th></tr></thead>
+<tr><td>EQ Lyr</td><td>x</td><td>19 19 02.63</td><td>+41 06 34.5</td><td>M</td><td>12.000</td><td>--</td><td></td><td></td><td>EQ    Lyr</td><td>Simbad</td></tr>
+</table></div>
