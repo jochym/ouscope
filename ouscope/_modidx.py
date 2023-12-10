@@ -3,7 +3,7 @@
 d = { 'settings': { 'branch': 'main',
                 'doc_baseurl': '/ouscope/',
                 'doc_host': 'https://jochym.github.io',
-                'git_url': 'https://github.com/jochym/ouscope/tree/main/',
+                'git_url': 'https://github.com/jochym/ouscope/',
                 'lib_path': 'ouscope'},
   'syms': { 'ouscope.core': { 'ouscope.core.Telescope': ('core.html#telescope', 'ouscope/core.py'),
                               'ouscope.core.Telescope.__init__': ('core.html#telescope.__init__', 'ouscope/core.py'),

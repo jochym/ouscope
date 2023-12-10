@@ -6,4 +6,4 @@ website:
   site-url: "https://jochym.github.io/ouscope/"
   description: "A python library for interacting with OU Telescope"
   repo-branch: main
-  repo-url: "https://github.com/jochym/ouscope/tree/main/"
+  repo-url: "https://github.com/jochym/ouscope/"
