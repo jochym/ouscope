@@ -6,9 +6,29 @@ from __future__ import annotations
 # %% auto 0
 __all__ = []
 
-# %% ../20_util.ipynb 3
-def cleanup(s: str) -> str:
+# %% ../20_util.ipynb 4
+import os
+from fastcore.basics import patch
+from ouscope.core import Telescope
+from tqdm.auto import tqdm
+
+# %% ../20_util.ipynb 5
+def print_dict(d):
+    for k, v in d.items():
+        print(f'{k}: {v}')
+
+# %% ../20_util.ipynb 7
+@patch
+def get_object_obs(self: Telescope, obj: str):
     '''
-    Remove non-asci characters from the string.
+    Find all jobs for a given object.
     '''
-    return s.encode('ascii','ignore').decode('ascii','ignore')
+    reqlst=self.get_user_requests(sort='completion')
+    print(f'Number of users requests: {len(reqlst)}')
+
+    complete = [rq for rq in sorted(reqlst, key=lambda r: int(r['requesttime']), reverse=True) 
+                        if Telescope.REQUESTSTATUS_TEXTS[int(rq['status'])]=='Complete']
+    print('Completed:', len(complete))
+    objjobs = ((int(self.get_request(int(j['id']))['jid']), int(j['id'])) 
+               for j in complete if j['objectname']==obj)
+    return objjobs

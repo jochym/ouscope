@@ -137,6 +137,7 @@ telescope.ini
 
 # Processing output
 OUT/
+VS/
 _proc/
 _docs/
 brt/

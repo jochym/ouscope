@@ -27,9 +27,13 @@ from io import StringIO, BytesIO
 from tqdm.auto import tqdm
 
 # %% ../10_core.ipynb 4
-from ouscope.util import cleanup
+def cleanup(s: str) -> str:
+    '''
+    Remove non-asci characters from the string.
+    '''
+    return s.encode('ascii','ignore').decode('ascii','ignore')
 
-# %% ../10_core.ipynb 5
+# %% ../10_core.ipynb 6
 class Telescope:
     '''
     Main telescope website API class.
@@ -65,17 +69,29 @@ class Telescope:
         26: "Other error",
     }
     
-    def __init__(self, user, passwd, cache='.cache/jobs'):
+    def __init__(self, user='', passwd='', config=None, cache='.cache/jobs'):
+        if config is not None:
+            conf = configparser.ConfigParser()
+            conf.read(expanduser(config))
+            self.user = conf['telescope.org']['user']
+            self.passwd = conf['telescope.org']['password']
+            self.cache = conf['cache']['jobs']
+        elif user and passwd :
+            self.user=user
+            self.passwd=passwd
+            self.cache=cache
+        else :
+            print('WARNING: You need to provide user&password or config file!')
+            print('WARNING: This object is not going to work!')
+            return
+            
         self.s=None
-        self.user=user
-        self.passwd=passwd
         self.tout=60
         self.retry=15
         self.login()
-        self.cache=cache
 
 
-# %% ../10_core.ipynb 6
+# %% ../10_core.ipynb 7
 @patch
 def login(self: Telescope):
     '''
@@ -92,7 +108,7 @@ def login(self: Telescope):
     log.debug('Logging in ...')
     self.s.post(self.url+'login.php', data=payload)
 
-# %% ../10_core.ipynb 7
+# %% ../10_core.ipynb 8
 @patch
 def logout(self: Telescope):
     '''
@@ -102,7 +118,7 @@ def logout(self: Telescope):
         self.s.post(self.url+'logout.php')
         self.s=None
 
-# %% ../10_core.ipynb 12
+# %% ../10_core.ipynb 13
 @patch
 def do_api_call(self: Telescope, module, req, params=None):
     rq = self.s.post(self.url+"api-user.php", {'module': module,
@@ -121,7 +137,7 @@ def do_rm_api(self: Telescope, req, params=None):
 def do_rc_api(self: Telescope, req, params=None):
     return self.do_api_call("request-constructor", req, params)
 
-# %% ../10_core.ipynb 13
+# %% ../10_core.ipynb 14
 @patch
 def get_user_requests(self: Telescope, 
                       folder: int =1,    # Id of the listed folder. Inbox=1.
@@ -160,7 +176,7 @@ def get_user_requests(self: Telescope,
     res+=dat['data']['requests']
     return res
 
-# %% ../10_core.ipynb 15
+# %% ../10_core.ipynb 16
 @patch
 def get_jid_for_req(self:Telescope, req=None) -> int:
     '''
@@ -192,7 +208,7 @@ def get_jid_for_req(self:Telescope, req=None) -> int:
                     return json.loads(l)['jid']
     return None
 
-# %% ../10_core.ipynb 17
+# %% ../10_core.ipynb 18
 @patch
 def get_user_folders(self: Telescope):
     '''
@@ -202,7 +218,7 @@ def get_user_folders(self: Telescope):
                                                'request': "0-get-my-folders"})
     return json.loads(rq.content)['data']
 
-# %% ../10_core.ipynb 19
+# %% ../10_core.ipynb 20
 @patch
 def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=16, minute=0, verb=False):
     '''Get the dt days of observations taken no later then time in t.
@@ -289,7 +305,7 @@ def get_obs_list(self: Telescope, t=None, dt=1, filtertype='', camera='', hour=1
             jlst.append(int(jid))
     return jlst
 
-# %% ../10_core.ipynb 21
+# %% ../10_core.ipynb 22
 @patch
 def get_job(self: Telescope, jid=None):
     '''Get a job data for a given JID'''
@@ -336,7 +352,7 @@ def get_job(self: Telescope, jid=None):
 
     return obs
 
-# %% ../10_core.ipynb 24
+# %% ../10_core.ipynb 25
 @patch
 def get_request(self: Telescope, rid=None):
     '''Get request data for a given RID'''
@@ -392,7 +408,7 @@ def get_request(self: Telescope, rid=None):
 
     return obs    
 
-# %% ../10_core.ipynb 26
+# %% ../10_core.ipynb 27
 @patch
 def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False, verbose=False):
     '''Download the raw observation obs (obtained from get_job) into zip
@@ -456,7 +472,7 @@ def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False
     else:
         return None
 
-# %% ../10_core.ipynb 28
+# %% ../10_core.ipynb 29
 @patch
 def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False, verbose=False):
     '''Get the raw observation obs (obtained from get_job) into zip
@@ -489,7 +505,7 @@ def get_obs(self: Telescope, obs=None, cube=True, recurse=True, pbar=False, verb
             return None
 
 
-# %% ../10_core.ipynb 31
+# %% ../10_core.ipynb 32
 @patch
 def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False, pbar=False):
     '''Download the raw observation obs (obtained from get_job) into zip
@@ -548,7 +564,7 @@ def download_obs_processed(self: Telescope, obs=None, directory='.', cube=False,
 
 
 
-# %% ../10_core.ipynb 33
+# %% ../10_core.ipynb 34
 @patch
 def get_obs_processed(self: Telescope, obs=None, cube=False):
     '''Get the raw observation obs (obtained from get_job) into zip
@@ -581,7 +597,7 @@ def get_obs_processed(self: Telescope, obs=None, cube=False):
     return None
 
 
-# %% ../10_core.ipynb 37
+# %% ../10_core.ipynb 38
 @patch
 def submit_job_api(self: Telescope, obj, exposure=30000, tele='COAST',
                     filt='BVR', darkframe=True,
@@ -629,7 +645,7 @@ def submit_job_api(self: Telescope, obj, exposure=30000, tele='COAST',
         log.warning('Submission error. Status:%s', r['status'])
         return False, r['status']
 
-# %% ../10_core.ipynb 38
+# %% ../10_core.ipynb 39
 @patch
 def submit_RADEC_job(self: Telescope, obj, exposure=30000, tele='COAST',
                     filt='BVR', darkframe=True,
@@ -706,10 +722,3 @@ def submit_RADEC_job(self: Telescope, obj, exposure=30000, tele='COAST',
     log.debug('Submit (ticket %s)', t)
     r=self.s.post(u,data={'ticket':t, 'action':'main-submit'})
     return r
-
-# %% ../10_core.ipynb 39
-@patch
-def submitVarStar(self: Telescope, name, expos=90, filt='BVR',comm='', tele='COAST'):
-    o=SkyCoord.from_name(name)
-    return self.submit_job_api(o, name=name, comment=comm,
-                            exposure=expos*1000, filt=filt, tele=tele)
