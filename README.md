@@ -143,32 +143,34 @@ scope.logout()
 </details>
 
     User folders:
-           Inbox (  1): 1713 items
+           Inbox (  1): 1720 items
       Favourites (  2):    0 items
          Archive (  3):  447 items
            Trash (  4):   63 items
         Complete (461):   13 items
 
-    User jochym has 1713 requests.
+    User jochym has 1720 requests.
 
     The most recent requests:
-    760205: DQ Vul          jid:        Waiting
-    760204: DX Vul          jid:        Waiting
-    760203: V686 Cyg        jid:        Waiting
+    760531: EQ Lyr          jid:        New
+    760530: LX Cyg          jid:        New
+    760529: DQ Vul          jid:        New
+    760528: DX Vul          jid:        New
+    760527: V686 Cyg        jid:        New
+    760526: SS Cyg          jid:        New
+    760525: CH Cyg          jid:        New
+    760205: DQ Vul          jid: 413202 Complete
+    760204: DX Vul          jid: 413201 Complete
+    760203: V686 Cyg        jid: 413200 Complete
     760202: IP Cyg          jid:        Waiting
-    760124: LX Cyg          jid:        Waiting
-    760123: EQ Lyr          jid:        Complete on site
-    760122: SS Cyg          jid:        Waiting
-    760121: CH Cyg          jid:        Waiting
-    759978: DX Vul          jid: 412982 Complete
-    759880: EQ Lyr          jid: 412885 Complete
-    759879: DQ Vul          jid: 412884 Complete
-    759878: V686 Cyg        jid: 412883 Complete
-    759877: IP Cyg          jid: 412882 Complete
-    759783: LX Cyg          jid: 412797 Complete
+    760124: LX Cyg          jid: 413122 Complete
+    760123: EQ Lyr          jid: 413121 Complete
+    760122: SS Cyg          jid: 413120 Complete
 
     The latest complete job:
-    J412982:R759978 (DX Vul) Completed at: 12 December 2023 19:57:50 UTC
+    J413202:R760205 (DQ Vul) Completed at: 14 December 2023 20:10:35 UTC
+    OK_WAIT                       
+    READY                         
 
 ### Analysis of the data
 
@@ -210,16 +212,16 @@ wcs.printwcs()
 
 </details>
 
-    Solving for 397FB509
-    solve-field -p -l 30 -O -L 1 -H 2 -u app -3 311.595833 -4 25.818056 -5 2 /tmp/field-solver8ryfd780/tmpnbolf7co.fits
+    Solving for 5644BC43
+    solve-field -p -l 30 -O -L 1 -H 2 -u app -3 300.012500 -4 22.780833 -5 2 /tmp/field-solverb4lz3sjc/tmpvpoposve.fits
     WCS Keywords
 
     Number of WCS axes: 2
     CTYPE : 'RA---TAN-SIP' 'DEC--TAN-SIP' 
-    CRVAL : 311.401353333 25.7103434986 
-    CRPIX : 1143.56307983 515.707740784 
-    CD1_1 CD1_2  : -0.000466406151695 -7.07930275958e-06 
-    CD2_1 CD2_2  : -7.09742118973e-06 0.000466460837363 
+    CRVAL : 299.968935258 22.8122733346 
+    CRPIX : 845.046401978 811.336247683 
+    CD1_1 CD1_2  : -0.000466593770382 -6.05975347053e-06 
+    CD2_1 CD2_2  : -7.17872510289e-06 0.000465931891585 
     NAXIS : 1536  1536  3
 
     WARNING: FITSFixedWarning: EPOCH = 'REAL' 
@@ -265,10 +267,17 @@ for g in objects:
 
 ### List of objects (variable stars) in the frame
 
-<div><i>Table length=1</i>
-<table id="table139792324096656" class="table-striped table-bordered table-condensed">
+<div><i>Table length=8</i>
+<table id="table139994011712336" class="table-striped table-bordered table-condensed">
 <thead><tr><th>GCVS</th><th>n_GCVS</th><th>RAJ2000</th><th>DEJ2000</th><th>VarType</th><th>magMax</th><th>Period</th><th>SpType</th><th>Exists</th><th>VarName</th><th>Simbad</th></tr></thead>
 <thead><tr><th></th><th></th><th></th><th></th><th></th><th>mag</th><th>d</th><th></th><th></th><th></th><th></th></tr></thead>
 <thead><tr><th>str10</th><th>str1</th><th>str11</th><th>str11</th><th>str10</th><th>float32</th><th>float64</th><th>str17</th><th>str12</th><th>str11</th><th>str6</th></tr></thead>
-<tr><td>DX Vul</td><td>x</td><td>20 46 23.05</td><td>+25 49 05.5</td><td>M</td><td>12.400</td><td>313.0000000000</td><td></td><td></td><td>DX    Vul</td><td>Simbad</td></tr>
+<tr><td>SW Vul</td><td>x</td><td>20 00 05.21</td><td>+22 56 06.6</td><td>UGSS</td><td>14.500</td><td>15.0000000000</td><td></td><td></td><td>SW    Vul</td><td>Simbad</td></tr>
+<tr><td>DQ Vul</td><td>x</td><td>20 00 03.01</td><td>+22 46 51.7</td><td>M</td><td>14.500</td><td>310.0000000000</td><td></td><td></td><td>DQ    Vul</td><td>Simbad</td></tr>
+<tr><td>V0418 Vul</td><td></td><td>19 59 41.89</td><td>+22 33 49.6</td><td>M:</td><td>13.600</td><td>--</td><td></td><td></td><td>V0418 Vul</td><td>Simbad</td></tr>
+<tr><td>V0433 Vul</td><td>x</td><td>20 00 32.54</td><td>+22 40 15.4</td><td>SR:</td><td>10.300</td><td>--</td><td></td><td></td><td>V0433 Vul</td><td>Simbad</td></tr>
+<tr><td>V0434 Vul</td><td>x</td><td>20 00 33.23</td><td>+22 43 41.2</td><td>SR:</td><td>11.400</td><td>--</td><td></td><td></td><td>V0434 Vul</td><td>Simbad</td></tr>
+<tr><td>V0452 Vul</td><td>x</td><td>20 00 43.71</td><td>+22 42 39.0</td><td>BY</td><td>7.670</td><td>12.0390000000</td><td>G5V</td><td></td><td>V0452 Vul</td><td>Simbad</td></tr>
+<tr><td>V0498 Vul</td><td>*</td><td>19 59 51.29</td><td>+22 42 32.3</td><td>UGSU</td><td>15.600</td><td>--</td><td></td><td></td><td>V0498 Vul</td><td>Simbad</td></tr>
+<tr><td>V0571 Vul</td><td>*</td><td>19 59 29.73</td><td>+22 45 13.1</td><td>M</td><td>14.400</td><td>214.0000000000</td><td></td><td></td><td>V0571 Vul</td><td>Simbad</td></tr>
 </table></div>
