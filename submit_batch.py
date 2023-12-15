@@ -57,7 +57,7 @@ obslst=[
     VStar('BI Her', comm='Mira', expos=180),
     VStar('DX Vul', comm='Mira', expos=180),
     VStar('DQ Vul', comm='Mira', expos=180),
-    VStar('EQ Lyr', comm='Mira', expos=240),
+    VStar('EQ Lyr', comm='Mira', expos=180),
     VStar('LX Cyg', comm='AAVSO', expos=180),
     ]
 
