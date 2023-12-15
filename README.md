@@ -143,32 +143,32 @@ scope.logout()
 </details>
 
     User folders:
-           Inbox (  1): 1704 items
+           Inbox (  1): 1713 items
       Favourites (  2):    0 items
          Archive (  3):  447 items
            Trash (  4):   63 items
         Complete (461):   13 items
 
-    User jochym has 1704 requests.
+    User jochym has 1713 requests.
 
     The most recent requests:
-    759880: EQ Lyr          jid:        Waiting
-    759879: DQ Vul          jid:        Waiting
-    759878: V686 Cyg        jid:        Waiting
-    759877: IP Cyg          jid:        Waiting
-    759783: LX Cyg          jid:        Waiting
-    759782: DX Vul          jid:        Waiting
-    759781: SS Cyg          jid:        Waiting
-    759780: CH Cyg          jid:        Waiting
-    759658: EQ Lyr          jid: 412679 Complete
-    759655: DQ Vul          jid: 412676 Complete
-    759654: V686 Cyg        jid: 412675 Complete
-    759653: IP Cyg          jid: 412674 Complete
-    759483: LX Cyg          jid: 412518 Complete
-    759452: EQ Lyr          jid: 412488 Complete
+    760205: DQ Vul          jid:        Waiting
+    760204: DX Vul          jid:        Waiting
+    760203: V686 Cyg        jid:        Waiting
+    760202: IP Cyg          jid:        Waiting
+    760124: LX Cyg          jid:        Waiting
+    760123: EQ Lyr          jid:        Complete on site
+    760122: SS Cyg          jid:        Waiting
+    760121: CH Cyg          jid:        Waiting
+    759978: DX Vul          jid: 412982 Complete
+    759880: EQ Lyr          jid: 412885 Complete
+    759879: DQ Vul          jid: 412884 Complete
+    759878: V686 Cyg        jid: 412883 Complete
+    759877: IP Cyg          jid: 412882 Complete
+    759783: LX Cyg          jid: 412797 Complete
 
     The latest complete job:
-    J412679:R759658 (EQ Lyr) Completed at: 9 December 2023 19:36:32 UTC
+    J412982:R759978 (DX Vul) Completed at: 12 December 2023 19:57:50 UTC
 
 ### Analysis of the data
 
@@ -210,15 +210,16 @@ wcs.printwcs()
 
 </details>
 
-    Getting A1E36A92 from cache
+    Solving for 397FB509
+    solve-field -p -l 30 -O -L 1 -H 2 -u app -3 311.595833 -4 25.818056 -5 2 /tmp/field-solver8ryfd780/tmpnbolf7co.fits
     WCS Keywords
 
     Number of WCS axes: 2
     CTYPE : 'RA---TAN-SIP' 'DEC--TAN-SIP' 
-    CRVAL : 290.135756976 41.0252130636 
-    CRPIX : 153.755741119 558.506164551 
-    CD1_1 CD1_2  : -0.000466761461958 -3.93688498768e-06 
-    CD2_1 CD2_2  : -3.88592965771e-06 0.000466462440999 
+    CRVAL : 311.401353333 25.7103434986 
+    CRPIX : 1143.56307983 515.707740784 
+    CD1_1 CD1_2  : -0.000466406151695 -7.07930275958e-06 
+    CD2_1 CD2_2  : -7.09742118973e-06 0.000466460837363 
     NAXIS : 1536  1536  3
 
     WARNING: FITSFixedWarning: EPOCH = 'REAL' 
@@ -265,9 +266,9 @@ for g in objects:
 ### List of objects (variable stars) in the frame
 
 <div><i>Table length=1</i>
-<table id="table140661408332432" class="table-striped table-bordered table-condensed">
+<table id="table139792324096656" class="table-striped table-bordered table-condensed">
 <thead><tr><th>GCVS</th><th>n_GCVS</th><th>RAJ2000</th><th>DEJ2000</th><th>VarType</th><th>magMax</th><th>Period</th><th>SpType</th><th>Exists</th><th>VarName</th><th>Simbad</th></tr></thead>
 <thead><tr><th></th><th></th><th></th><th></th><th></th><th>mag</th><th>d</th><th></th><th></th><th></th><th></th></tr></thead>
 <thead><tr><th>str10</th><th>str1</th><th>str11</th><th>str11</th><th>str10</th><th>float32</th><th>float64</th><th>str17</th><th>str12</th><th>str11</th><th>str6</th></tr></thead>
-<tr><td>EQ Lyr</td><td>x</td><td>19 19 02.63</td><td>+41 06 34.5</td><td>M</td><td>12.000</td><td>--</td><td></td><td></td><td>EQ    Lyr</td><td>Simbad</td></tr>
+<tr><td>DX Vul</td><td>x</td><td>20 46 23.05</td><td>+25 49 05.5</td><td>M</td><td>12.400</td><td>313.0000000000</td><td></td><td></td><td>DX    Vul</td><td>Simbad</td></tr>
 </table></div>

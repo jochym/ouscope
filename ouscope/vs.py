@@ -12,6 +12,7 @@ import mechanicalsoup
 from lxml import etree
 from math import sqrt
 from .core import Telescope
+from astropy.coordinates import SkyCoord
 import datetime
 
 # %% ../25_vs.ipynb 4
