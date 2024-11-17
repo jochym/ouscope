@@ -142,3 +142,5 @@ _proc/
 _docs/
 brt/
 /.quarto/
+telescope.sqlite
+vstars.sqlite
