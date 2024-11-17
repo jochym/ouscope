@@ -176,13 +176,16 @@ scope.logout()
 
 ### Analysis of the data
 
-Let us plot and analyse the last completed job listed above.
+Let us plot and analyse the last completed job listed above.  
+The code below performs following tasks:
 
-The code below: - opens the data downloaded above (`obs` variable) -
-plate-solves the resultings fits data (with local AstrometryNet
-solver) - creates WCS object from the solution - plots the RGB image of
-the data with RA-DEC grid - query the Vizier database for variable stars
-0.25 deg from center - mark all objects found on the picture
+- opens the data downloaded above (`obs` variable)
+- plate-solves the resultings fits data (with local AstrometryNet
+  solver)
+- creates WCS object from the solution
+- plots the RGB image of the data with RA-DEC grid
+- query the Vizier database for variable stars 0.25 deg from center
+- mark all objects found on the picture
 
 <details class="code-fold">
 <summary>Code</summary>
