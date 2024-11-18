@@ -122,7 +122,7 @@ def logout(self: Telescope):
 
 # %% ../10_core.ipynb 13
 @patch
-def do_api_call(self: Telescope, module, req, params=None):
+def __do_api_call(self: Telescope, module, req, params=None):
     rq = self.s.post(self.url+"api-user.php", {'module': module,
                                                'request': req,
                                                'params': {} if params is None else json.dumps(params)})
@@ -130,14 +130,14 @@ def do_api_call(self: Telescope, module, req, params=None):
 
 #| exporti
 @patch
-def do_rm_api(self: Telescope, req, params=None):
-    return self.do_api_call("request-manager", req, params)
+def __do_rm_api(self: Telescope, req, params=None):
+    return self.__do_api_call("request-manager", req, params)
 
 
 #| exporti
 @patch
-def do_rc_api(self: Telescope, req, params=None):
-    return self.do_api_call("request-constructor", req, params)
+def __do_rc_api(self: Telescope, req, params=None):
+    return self.__do_api_call("request-constructor", req, params)
 
 # %% ../10_core.ipynb 14
 @patch
@@ -158,22 +158,16 @@ def get_user_requests(self: Telescope,
         'sort': sort,
         'folderid': folder}
 
-    rq = self.s.post(self.url+"api-user.php", {'module': "request-manager", 
-                                               'request': "1-get-list-own",
-                                               'params' : json.dumps(params)})
+    dat = self.__do_rm_api("1-get-list-own", params)
     res=[]
-    dat=json.loads(rq.content)
     total=int(dat['data']['totalRequests'])
     res+=dat['data']['requests']
 
     # Fetch the rest
     params['limit']=total-len(res)
     params['startAfterRow']=len(res)
-    rq = self.s.post(self.url+"api-user.php", {'module': "request-manager", 
-                                               'request': "1-get-list-own",
-                                               'params' : json.dumps(params)})
+    dat = self.__do_rm_api("1-get-list-own", params)
 
-    dat=json.loads(rq.content)
     total=int(dat['data']['totalRequests'])
     res+=dat['data']['requests']
     return res
@@ -200,8 +194,10 @@ def get_jid_for_req(self:Telescope, req=None) -> int:
                 return None
         except TypeError:
             id = req
+            
     rq = self.s.post(self.url+"v4request-view.php?" + f'rid={id}')
     soup = BeautifulSoup(rq.text,'lxml')
+    
     for blk in soup.find_all('script'):
         if "var info = " in blk.text:
             for l in  blk.text.split('\n'):
@@ -216,9 +212,7 @@ def get_user_folders(self: Telescope):
     '''
     Get all user folders. Returns list of dictionaries.
     '''
-    rq = self.s.post(self.url+"api-user.php", {'module': "request-manager", 
-                                               'request': "0-get-my-folders"})
-    return json.loads(rq.content)['data']
+    return self.__do_rm_api("0-get-my-folders")['data']
 
 # %% ../10_core.ipynb 20
 @patch
@@ -428,8 +422,8 @@ def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False
     if 'flatid' in obs :
         payload['flatid']=obs['flatid']
     
-    rsp = self.do_api_call("image-engine", 
-                           "0-create-dl" + ("3d" if cube else "zip"), payload)
+    rsp = self.__do_api_call("image-engine", 
+                             "0-create-dl" + ("3d" if cube else "zip"), payload)
     ieid = rsp['data']['ieID']
 
     n=0    
@@ -438,7 +432,7 @@ def download_obs(self: Telescope, obs=None, directory='.', cube=True, pbar=False
             print(f"{rsp['status']:30}", end='\n')
         time.sleep(2)
         n+=1
-        rsp = self.do_api_call("image-engine", "0-is-job-ready", {'ieid':ieid,})
+        rsp = self.__do_api_call("image-engine", "0-is-job-ready", {'ieid':ieid,})
         if n>30:
             raise TimeoutError
     
@@ -634,12 +628,12 @@ def submit_job_api(self: Telescope, obj, exposure=30000, tele='COAST',
               'objecttype': 'RADEC', 'objectname': name,
               'objectid': ra+' '+dec, 'usercomments': comment }
 
-    self.do_rc_api("0-rb-clear")
+    self.__do_rc_api("0-rb-clear")
 
-    r = self.do_rc_api("0-rb-set", params)
+    r = self.__do_rc_api("0-rb-set", params)
     log.debug('Req data:%s', r)
     if r['success'] :
-        r = self.do_rc_api("0-rb-submit")
+        r = self.__do_rc_api("0-rb-submit")
         log.debug('Submission data:%s', r)
     if r['success'] :
         return True, r['data']['id']
