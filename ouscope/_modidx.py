@@ -39,4 +39,5 @@ d = { 'settings': { 'branch': 'main',
                               'ouscope.util.print_dict': ('util.html#print_dict', 'ouscope/util.py')},
             'ouscope.vs': { 'ouscope.vs.Telescope.submitVarStar': ('vs.html#telescope.submitvarstar', 'ouscope/vs.py'),
                             'ouscope.vs.get_VS_sequence': ('vs.html#get_vs_sequence', 'ouscope/vs.py'),
-                            'ouscope.vs.prtMag': ('vs.html#prtmag', 'ouscope/vs.py')}}}
+                            'ouscope.vs.prtMag': ('vs.html#prtmag', 'ouscope/vs.py')},
+            'ouscope.vsapp': {'ouscope.vsapp.make_color_image': ('vsapp.html#make_color_image', 'ouscope/vsapp.py')}}}
