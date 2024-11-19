@@ -144,3 +144,5 @@ brt/
 /.quarto/
 telescope.sqlite
 vstars.sqlite
+.last_checked
+
